@@ -1,7 +1,11 @@
-import { $, cornerstone } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
+import triggerEvent from '../util/triggerEvent.js';
+import { clipToBox } from '../util/clip.js';
 
 export default function (eventData, toolType, data, handle, doneMovingCallback, preventHandleOutsideImage) {
-    // Console.log('moveNewHandleTouch');
+  // Console.log('moveNewHandleTouch');
+  const cornerstone = external.cornerstone;
   const element = eventData.element;
   const imageCoords = cornerstone.pageToPixel(element, eventData.currentPoints.page.x, eventData.currentPoints.page.y + 50);
   const distanceFromTouch = {
@@ -12,39 +16,39 @@ export default function (eventData, toolType, data, handle, doneMovingCallback, 
   handle.active = true;
   data.active = true;
 
-  function moveCallback (e, eventData) {
+  function moveCallback (e) {
+    const eventData = e.detail;
+
     handle.x = eventData.currentPoints.image.x + distanceFromTouch.x;
     handle.y = eventData.currentPoints.image.y + distanceFromTouch.y;
 
     if (preventHandleOutsideImage) {
-      handle.x = Math.max(handle.x, 0);
-      handle.x = Math.min(handle.x, eventData.image.width);
-
-      handle.y = Math.max(handle.y, 0);
-      handle.y = Math.min(handle.y, eventData.image.height);
+      clipToBox(handle, eventData.image);
     }
 
     cornerstone.updateImage(element);
 
-    const eventType = 'CornerstoneToolsMeasurementModified';
+    const eventType = EVENTS.MEASUREMENT_MODIFIED;
     const modifiedEventData = {
       toolType,
       element,
       measurementData: data
     };
 
-    $(element).trigger(eventType, modifiedEventData);
+    triggerEvent(element, eventType, modifiedEventData);
   }
 
-  function moveEndCallback (e, eventData) {
-    $(element).off('CornerstoneToolsTouchDrag', moveCallback);
-    $(element).off('CornerstoneToolsTouchPinch', moveEndCallback);
-    $(element).off('CornerstoneToolsTouchEnd', moveEndCallback);
-    $(element).off('CornerstoneToolsTap', moveEndCallback);
-    $(element).off('CornerstoneToolsTouchStart', stopImmediatePropagation);
-    $(element).off('CornerstoneToolsToolDeactivated', toolDeactivatedCallback);
+  function moveEndCallback (e) {
+    const eventData = e.detail;
 
-    if (e.type === 'CornerstoneToolsTouchPinch' || e.type === 'CornerstoneToolsTouchPress') {
+    element.removeEventListener(EVENTS.TOUCH_DRAG, moveCallback);
+    element.removeEventListener(EVENTS.TOUCH_PINCH, moveEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_END, moveEndCallback);
+    element.removeEventListener(EVENTS.TAP, moveEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_START, stopImmediatePropagation);
+    element.removeEventListener(EVENTS.TOOL_DEACTIVATED, toolDeactivatedCallback);
+
+    if (e.type === EVENTS.TOUCH_PINCH || e.type === EVENTS.TOUCH_PRESS) {
       handle.active = false;
       cornerstone.updateImage(element);
       doneMovingCallback();
@@ -58,11 +62,7 @@ export default function (eventData, toolType, data, handle, doneMovingCallback, 
     handle.y = eventData.currentPoints.image.y + distanceFromTouch.y;
 
     if (preventHandleOutsideImage) {
-      handle.x = Math.max(handle.x, 0);
-      handle.x = Math.min(handle.x, eventData.image.width);
-
-      handle.y = Math.max(handle.y, 0);
-      handle.y = Math.min(handle.y, eventData.image.height);
+      clipToBox(handle, eventData.image);
     }
 
     cornerstone.updateImage(element);
@@ -73,27 +73,27 @@ export default function (eventData, toolType, data, handle, doneMovingCallback, 
   }
 
   function stopImmediatePropagation (e) {
-        // Stop the CornerstoneToolsTouchStart event from
-        // Become a CornerstoneToolsTouchStartActive event when
-        // MoveNewHandleTouch ends
+    // Stop the CornerstoneToolsTouchStart event from
+    // Become a CornerstoneToolsTouchStartActive event when
+    // MoveNewHandleTouch ends
     e.stopImmediatePropagation();
 
     return false;
   }
 
-  $(element).on('CornerstoneToolsTouchDrag', moveCallback);
-  $(element).on('CornerstoneToolsTouchPinch', moveEndCallback);
-  $(element).on('CornerstoneToolsTouchEnd', moveEndCallback);
-  $(element).on('CornerstoneToolsTap', moveEndCallback);
-  $(element).on('CornerstoneToolsTouchStart', stopImmediatePropagation);
+  element.addEventListener(EVENTS.TOUCH_DRAG, moveCallback);
+  element.addEventListener(EVENTS.TOUCH_PINCH, moveEndCallback);
+  element.addEventListener(EVENTS.TOUCH_END, moveEndCallback);
+  element.addEventListener(EVENTS.TAP, moveEndCallback);
+  element.addEventListener(EVENTS.TOUCH_START, stopImmediatePropagation);
 
   function toolDeactivatedCallback () {
-    $(element).off('CornerstoneToolsTouchDrag', moveCallback);
-    $(element).off('CornerstoneToolsTouchPinch', moveEndCallback);
-    $(element).off('CornerstoneToolsTouchEnd', moveEndCallback);
-    $(element).off('CornerstoneToolsTap', moveEndCallback);
-    $(element).off('CornerstoneToolsTouchStart', stopImmediatePropagation);
-    $(element).off('CornerstoneToolsToolDeactivated', toolDeactivatedCallback);
+    element.removeEventListener(EVENTS.TOUCH_DRAG, moveCallback);
+    element.removeEventListener(EVENTS.TOUCH_PINCH, moveEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_END, moveEndCallback);
+    element.removeEventListener(EVENTS.TAP, moveEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_START, stopImmediatePropagation);
+    element.removeEventListener(EVENTS.TOOL_DEACTIVATED, toolDeactivatedCallback);
 
     handle.active = false;
     data.active = false;
@@ -101,15 +101,11 @@ export default function (eventData, toolType, data, handle, doneMovingCallback, 
     handle.y = eventData.currentPoints.image.y + distanceFromTouch.y;
 
     if (preventHandleOutsideImage) {
-      handle.x = Math.max(handle.x, 0);
-      handle.x = Math.min(handle.x, eventData.image.width);
-
-      handle.y = Math.max(handle.y, 0);
-      handle.y = Math.min(handle.y, eventData.image.height);
+      clipToBox(handle, eventData.image);
     }
 
     cornerstone.updateImage(element);
   }
 
-  $(element).on('CornerstoneToolsToolDeactivated', toolDeactivatedCallback);
+  element.addEventListener(EVENTS.TOOL_DEACTIVATED, toolDeactivatedCallback);
 }

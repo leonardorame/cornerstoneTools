@@ -1,10 +1,12 @@
-import { $, cornerstone } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
 import { globalImageIdSpecificToolStateManager } from './imageIdSpecificStateManager.js';
+import triggerEvent from '../util/triggerEvent.js';
 
 function getElementToolStateManager (element) {
-  const enabledImage = cornerstone.getEnabledElement(element);
-    // If the enabledImage has no toolStateManager, create a default one for it
-    // NOTE: This makes state management element specific
+  const enabledImage = external.cornerstone.getEnabledElement(element);
+  // If the enabledImage has no toolStateManager, create a default one for it
+  // NOTE: This makes state management element specific
 
   if (enabledImage.toolStateManager === undefined) {
     enabledImage.toolStateManager = globalImageIdSpecificToolStateManager;
@@ -20,14 +22,14 @@ function addToolState (element, toolType, measurementData) {
 
   toolStateManager.add(element, toolType, measurementData);
 
-  const eventType = 'CornerstoneToolsMeasurementAdded';
+  const eventType = EVENTS.MEASUREMENT_ADDED;
   const eventData = {
     toolType,
     element,
     measurementData
   };
 
-  $(element).trigger(eventType, eventData);
+  triggerEvent(element, eventType, eventData);
 }
 
 // Here you can get state - used by tools as well as modules
@@ -42,7 +44,7 @@ function getToolState (element, toolType) {
 function removeToolState (element, toolType, data) {
   const toolStateManager = getElementToolStateManager(element);
   const toolData = toolStateManager.get(element, toolType);
-    // Find this tool data
+  // Find this tool data
   let indexOfData = -1;
 
   for (let i = 0; i < toolData.data.length; i++) {
@@ -54,14 +56,14 @@ function removeToolState (element, toolType, data) {
   if (indexOfData !== -1) {
     toolData.data.splice(indexOfData, 1);
 
-    const eventType = 'CornerstoneToolsMeasurementRemoved';
+    const eventType = EVENTS.MEASUREMENT_REMOVED;
     const eventData = {
       toolType,
       element,
       measurementData: data
     };
 
-    $(element).trigger(eventType, eventData);
+    triggerEvent(element, eventType, eventData);
   }
 }
 
@@ -69,7 +71,7 @@ function clearToolState (element, toolType) {
   const toolStateManager = getElementToolStateManager(element);
   const toolData = toolStateManager.get(element, toolType);
 
-    // If any toolData actually exists, clear it
+  // If any toolData actually exists, clear it
   if (toolData !== undefined) {
     toolData.data = [];
   }
@@ -77,7 +79,7 @@ function clearToolState (element, toolType) {
 
 // Sets the tool state manager for an element
 function setElementToolStateManager (element, toolStateManager) {
-  const enabledImage = cornerstone.getEnabledElement(element);
+  const enabledImage = external.cornerstone.getEnabledElement(element);
 
   enabledImage.toolStateManager = toolStateManager;
 }

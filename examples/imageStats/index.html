@@ -47,28 +47,23 @@
 </div>
 </body>
 
-
-<!-- jquery - currently a dependency and thus required for using cornerstoneWADOImageLoader -->
-<script src="../jquery.min.js"></script>
-
 <!-- include the hammer.js library for touch gestures-->
 <script src="../hammer.min.js"></script>
 
 <!-- include the cornerstone library -->
-<script src="../cornerstone.min.js"></script>
-<script src="../cornerstoneMath.min.js"></script>
+<script src="https://unpkg.com/cornerstone-core/dist/cornerstone.min.js"></script>
+<script src="https://unpkg.com/cornerstone-math/dist/cornerstoneMath.min.js"></script>
 
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
+<script>window.cornerstoneTools || document.write('<script src="https://unpkg.com/cornerstone-tools">\x3C/script>')</script>
 
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
 <script src="../exampleMetaDataProvider.js"></script>
 
 <script>
-    var container = $('#dicomImage');
-    
-    var element = container.get(0);
+    var element = document.getElementById('dicomImage');
     var imageId = 'example://1';
 
     cornerstone.enable(element);

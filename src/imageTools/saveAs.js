@@ -1,33 +1,34 @@
-import { $ } from '../externalModules.js';
+export default function saveAs (element, filename, mimetype = 'image/png') {
+  // Setting the default value for mimetype to image/png
+  const canvas = element.querySelector('canvas');
 
-export default function (element, filename, mimetype) {
-  // setting the default value for mimetype to image/png
-  mimetype = mimetype || "image/png";
-  const canvas = $(element).find('canvas').get(0);
+  // If we are using IE, use canvas.msToBlob
+  if (canvas.msToBlob) {
+    const blob = canvas.msToBlob();
 
-    // Thanks to Ken Fyrstenber
-    // http://stackoverflow.com/questions/18480474/how-to-save-an-image-from-canvas
+    return window.navigator.msSaveBlob(blob, filename);
+  }
+
+  // Thanks to Ken Fyrstenber
+  // http://stackoverflow.com/questions/18480474/how-to-save-an-image-from-canvas
   const lnk = document.createElement('a');
 
-    // / the key here is to set the download attribute of the a tag
+  // The key here is to set the download attribute of the a tag
   lnk.download = filename;
 
-    // / convert canvas content to data-uri for link. When download
-    // / attribute is set the content pointed to by link will be
-    // / pushed as 'download' in HTML5 capable browsers
-  lnk.href = canvas.toDataURL(mimetype);
+  // Convert canvas content to data-uri for link. When download
+  // Attribute is set the content pointed to by link will be
+  // Pushed as 'download' in HTML5 capable browsers
+  lnk.href = canvas.toDataURL(mimetype, 1);
 
-    // / create a 'fake' click-event to trigger the download
+  // Create a 'fake' click-event to trigger the download
   if (document.createEvent) {
-
     const e = document.createEvent('MouseEvents');
 
     e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 
     lnk.dispatchEvent(e);
-
   } else if (lnk.fireEvent) {
-
     lnk.fireEvent('onclick');
   }
 }

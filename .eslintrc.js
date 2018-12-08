@@ -2,11 +2,11 @@ module.exports = {
   'env': {
     'browser': true,
     'es6': true,
-    'jquery': true,
     'node': true,
     'mocha': true
   },
   'extends': 'eslint:recommended',
+  'plugins': ['import'],
   'parserOptions': {
     'sourceType': 'module'
   },
@@ -23,7 +23,14 @@ module.exports = {
     'brace-style': 'warn',
     'callback-return': 'warn',
     'camelcase': 'warn',
-    'capitalized-comments': 'warn',
+    'capitalized-comments': [
+        "warn",
+        "always",
+        {
+            "ignorePattern": "pragma|ignored",
+            "ignoreInlineComments": true
+        }
+    ],
     'class-methods-use-this': 'warn',
     'comma-dangle': 'warn',
     'comma-spacing': [
@@ -60,6 +67,15 @@ module.exports = {
     'id-match': 'warn',
     'indent': ['warn', 2],
     //'init-declarations': 'warn',
+    'import/default': 'warn',
+    'import/export': 'warn',
+    'import/extensions': ['warn', { "js": "always" }],
+    'import/first': 'warn',
+    'import/named': 'warn',
+    'import/namespace': 'warn',
+    'import/newline-after-import': 'warn',
+    'import/no-unresolved': 'warn',
+    'import/no-webpack-loader-syntax': 'warn',
     'jsx-quotes': 'warn',
     'key-spacing': 'warn',
     /*'keyword-spacing': [
@@ -238,7 +254,7 @@ module.exports = {
       'warn',
       'never'
     ],
-    //'valid-jsdoc': 'warn',
+    'valid-jsdoc': 'warn',
     'vars-on-top': 'warn',
     'wrap-iife': ['warn', 'inside'],
     'wrap-regex': 'warn',

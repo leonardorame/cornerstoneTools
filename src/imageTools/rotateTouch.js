@@ -1,19 +1,22 @@
-import { $, cornerstone } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
 
-function touchRotateCallback (e, eventData) {
+function touchRotateCallback (e) {
+  const eventData = e.detail;
+
   eventData.viewport.rotation += eventData.rotation;
-  cornerstone.setViewport(eventData.element, eventData.viewport);
+  external.cornerstone.setViewport(eventData.element, eventData.viewport);
 
   return false;
 }
 
 function disable (element) {
-  $(element).off('CornerstoneToolsTouchRotate', touchRotateCallback);
+  element.removeEventListener(EVENTS.TOUCH_ROTATE, touchRotateCallback);
 }
 
 function activate (element) {
-  $(element).off('CornerstoneToolsTouchRotate', touchRotateCallback);
-  $(element).on('CornerstoneToolsTouchRotate', touchRotateCallback);
+  element.removeEventListener(EVENTS.TOUCH_ROTATE, touchRotateCallback);
+  element.addEventListener(EVENTS.TOUCH_ROTATE, touchRotateCallback);
 }
 
 const rotateTouch = {

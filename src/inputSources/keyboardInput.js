@@ -1,16 +1,24 @@
-import { $, cornerstone } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
+import triggerEvent from '../util/triggerEvent.js';
 
 let mouseX;
 let mouseY;
 
 function keyPress (e) {
+  const cornerstone = external.cornerstone;
   const element = e.currentTarget;
+  const enabledElement = cornerstone.getEnabledElement(element);
+
+  if (!enabledElement.image) {
+    return;
+  }
 
   const keyPressData = {
     event: window.event || e, // Old IE support
     element,
     viewport: cornerstone.getViewport(element),
-    image: cornerstone.getEnabledElement(element).image,
+    image: enabledElement.image,
     currentPoints: {
       page: {
         x: mouseX,
@@ -25,33 +33,37 @@ function keyPress (e) {
   keyPressData.currentPoints.canvas = cornerstone.pixelToCanvas(element, keyPressData.currentPoints.image);
 
   const keyPressEvents = {
-    keydown: 'CornerstoneToolsKeyDown',
-    keypress: 'CornerstoneToolsKeyPress',
-    keyup: 'CornerstoneToolsKeyUp'
-
+    keydown: EVENTS.KEY_DOWN,
+    keypress: EVENTS.KEY_PRESS,
+    keyup: EVENTS.KEY_UP
   };
 
-  $(element).trigger(keyPressEvents[e.type], keyPressData);
+  triggerEvent(element, keyPressEvents[e.type], keyPressData);
 }
 
 function mouseMove (e) {
-  mouseX = e.pageX || e.originalEvent.pageX;
-  mouseY = e.pageY || e.originalEvent.pageY;
+  mouseX = e.pageX;
+  mouseY = e.pageY;
 }
 
-const keyboardEvent = 'keydown keypress keyup';
+const keyboardEvents = ['keydown', 'keypress', 'keyup'];
 
 function enable (element) {
-    // Prevent handlers from being attached multiple times
-  disable(element);
+  keyboardEvents.forEach((eventType) => {
+    element.removeEventListener(eventType, keyPress);
+    element.addEventListener(eventType, keyPress);
+  });
 
-  $(element).on(keyboardEvent, keyPress);
-  $(element).on('mousemove', mouseMove);
+  element.removeEventListener('mousemove', mouseMove);
+  element.addEventListener('mousemove', mouseMove);
 }
 
 function disable (element) {
-  $(element).off(keyboardEvent, keyPress);
-  $(element).off('mousemove', mouseMove);
+  keyboardEvents.forEach((eventType) => {
+    element.removeEventListener(eventType, keyPress);
+  });
+
+  element.removeEventListener('mousemove', mouseMove);
 }
 
 // Module exports

@@ -1,21 +1,21 @@
-import { $ } from '../externalModules.js';
+import EVENTS from '../events.js';
 
 export default function (keyDownCallback) {
   let configuration = {};
 
-  const toolInterface = {
+  return {
     activate (element) {
-      $(element).off('CornerstoneToolsKeyDown', keyDownCallback);
-      $(element).on('CornerstoneToolsKeyDown', keyDownCallback);
+      element.removeEventListener(EVENTS.KEY_DOWN, keyDownCallback);
+      element.addEventListener(EVENTS.KEY_DOWN, keyDownCallback);
     },
     disable (element) {
-      $(element).off('CornerstoneToolsKeyDown', keyDownCallback);
+      element.removeEventListener(EVENTS.KEY_DOWN, keyDownCallback);
     },
     enable (element) {
-      $(element).off('CornerstoneToolsKeyDown', keyDownCallback);
+      element.removeEventListener(EVENTS.KEY_DOWN, keyDownCallback);
     },
     deactivate (element) {
-      $(element).off('CornerstoneToolsKeyDown', keyDownCallback);
+      element.removeEventListener(EVENTS.KEY_DOWN, keyDownCallback);
     },
     getConfiguration () {
       return configuration;
@@ -24,7 +24,4 @@ export default function (keyDownCallback) {
       configuration = config;
     }
   };
-
-
-  return toolInterface;
 }

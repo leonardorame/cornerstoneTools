@@ -1,7 +1,10 @@
-import { $ } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
+import triggerEvent from '../util/triggerEvent.js';
 
 // This object manages a collection of measurements
 function MeasurementManager () {
+  const cornerstone = external.cornerstone;
   const that = this;
 
   that.measurements = [];
@@ -15,7 +18,7 @@ function MeasurementManager () {
       measurement
     };
 
-    $(that).trigger('CornerstoneMeasurementAdded', eventDetail);
+    triggerEvent(cornerstone.events, EVENTS.MEASUREMENT_ADDED, eventDetail);
   };
 
   this.remove = function (index) {
@@ -28,7 +31,7 @@ function MeasurementManager () {
       measurement
     };
 
-    $(that).trigger('CornerstoneMeasurementRemoved', eventDetail);
+    triggerEvent(cornerstone.events, EVENTS.MEASUREMENT_REMOVED, eventDetail);
   };
 
 }

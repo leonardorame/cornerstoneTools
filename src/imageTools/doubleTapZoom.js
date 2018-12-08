@@ -1,14 +1,17 @@
-import { cornerstone } from '../externalModules.js';
+import external from '../externalModules.js';
 import doubleTapTool from './doubleTapTool.js';
 
 function fitToWindowStrategy (eventData) {
-  cornerstone.fitToWindow(eventData.element);
+  external.cornerstone.fitToWindow(eventData.element);
 }
 
-function doubleTapCallback (e, eventData) {
+function doubleTapCallback (e) {
+  const eventData = e.detail;
+
   doubleTapZoom.strategy(eventData);
 
-  return false; // False = causes jquery to preventDefault() and stopPropagation() this event
+  e.preventDefault();
+  e.stopPropagation();
 }
 
 const doubleTapZoom = doubleTapTool(doubleTapCallback);

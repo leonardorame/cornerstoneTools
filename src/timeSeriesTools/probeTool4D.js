@@ -1,14 +1,16 @@
-import { cornerstone } from '../externalModules.js';
+import external from '../externalModules.js';
 import mouseButtonTool from '../imageTools/mouseButtonTool.js';
 import drawHandles from '../manipulators/drawHandles.js';
-import setContextToDisplayFontSize from '../util/setContextToDisplayFontSize.js';
 import { getToolState } from '../stateManagement/toolState.js';
 import MeasurementManager from '../measurementManager/measurementManager.js';
 import LineSampleMeasurement from '../measurementManager/lineSampleMeasurement.js';
+import drawTextBox from '../util/drawTextBox.js';
+import { draw } from '../util/drawing.js';
 
 const toolType = 'probe4D';
 
 function updateLineSample (measurementData) {
+  const cornerstone = external.cornerstone;
   const samples = [];
 
   measurementData.timeSeries.stacks.forEach(function (stack) {
@@ -40,7 +42,7 @@ function createNewMeasurement (mouseEventData) {
 
   const timeSeries = timeSeriestoolData.data[0];
 
-    // Create the measurement data for this tool with the end handle activated
+  // Create the measurement data for this tool with the end handle activated
   const measurementData = {
     timeSeries,
     lineSample: new LineSampleMeasurement(),
@@ -65,45 +67,39 @@ function createNewMeasurement (mouseEventData) {
 
 // /////// BEGIN IMAGE RENDERING ///////
 
-function onImageRendered (e, eventData) {
-    // If we have no toolData for this element, return immediately as there is nothing to do
+function onImageRendered (e) {
+  const cornerstone = external.cornerstone;
+  const eventData = e.detail;
+  // If we have no toolData for this element, return immediately as there is nothing to do
   const toolData = getToolState(e.currentTarget, toolType);
 
   if (!toolData) {
     return;
   }
 
-    // We have tool data for this element - iterate over each one and draw it
-  const context = eventData.canvasContext.canvas.getContext('2d');
+  // We have tool data for this element - iterate over each one and draw it
+  const context = eventData.canvasContext;
 
-  cornerstone.setToPixelCoordinateSystem(eventData.enabledElement, context);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+
   const color = 'white';
 
   for (let i = 0; i < toolData.data.length; i++) {
-    context.save();
-    const data = toolData.data[i];
+    draw(context, (context) => {
+      const data = toolData.data[i];
 
-        // Draw the handles
-    context.beginPath();
-    drawHandles(context, eventData, data.handles, color);
-    context.stroke();
+      drawHandles(context, eventData, data.handles, color);
 
-        // Draw text
-    const fontParameters = setContextToDisplayFontSize(eventData.enabledElement, eventData.canvasContext, 15);
-
-    context.font = `${fontParameters.fontSize}px Arial`;
-
+      const coords = {
         // Translate the x/y away from the cursor
-    const x = Math.round(data.handles.end.x);
-    const y = Math.round(data.handles.end.y);
-    const textX = data.handles.end.x + 3;
-    const textY = data.handles.end.y - 3;
+        x: data.handles.end.x + 3,
+        y: data.handles.end.y - 3
+      };
 
-    context.fillStyle = color;
+      const textCoords = cornerstone.pixelToCanvas(eventData.element, coords);
 
-    context.fillText(`${x},${y}`, textX, textY);
-
-    context.restore();
+      drawTextBox(context, `${data.handles.end.x}, ${data.handles.end.y}`, textCoords.x, textCoords.y, color);
+    });
   }
 }
 // /////// END IMAGE RENDERING ///////

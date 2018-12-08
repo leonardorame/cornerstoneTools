@@ -1,6 +1,24 @@
-import $ from 'jquery';
-import Hammer from 'hammerjs';
-import * as cornerstone from 'cornerstone-core';
-import * as cornerstoneMath from 'cornerstone-math';
+let cornerstone = window.cornerstone;
+let cornerstoneMath = window.cornerstoneMath;
+let Hammer = window.Hammer;
 
-export { $, Hammer, cornerstone, cornerstoneMath };
+export default {
+  set cornerstone (cs) {
+    cornerstone = cs;
+  },
+  get cornerstone () {
+    return cornerstone;
+  },
+  set cornerstoneMath (cm) {
+    cornerstoneMath = cm;
+  },
+  get cornerstoneMath () {
+    return cornerstoneMath;
+  },
+  set Hammer (module) {
+    Hammer = module;
+  },
+  get Hammer () {
+    return Hammer;
+  }
+};

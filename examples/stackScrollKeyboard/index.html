@@ -59,41 +59,32 @@
 
 </body>
 
-<!-- jquery - included to make things easier to demo, not needed or used by the cornerstone library but
-is used by our example image loader-->
-<script src="../jquery.min.js"></script>
-
 <!-- include the cornerstone library -->
-<script src="../cornerstone.min.js"></script>
-<script src="../cornerstoneMath.min.js"></script>
+<script src="https://unpkg.com/cornerstone-core/dist/cornerstone.min.js"></script>
+<script src="https://unpkg.com/cornerstone-math/dist/cornerstoneMath.min.js"></script>
 
 <!-- include the cornerstone tools library -->
 <script src="../../dist/cornerstoneTools.js"></script>
+<script>window.cornerstoneTools || document.write('<script src="https://unpkg.com/cornerstone-tools">\x3C/script>')</script>
 
 <!-- include special code for these examples which provides images -->
 <script src="../exampleImageLoader.js"></script>
 
 <script>
-    var element = $('#dicomImage').get(0);
+    var element = document.getElementById('dicomImage');
 
-    function onViewportUpdated(e, data) {
-        var viewport = data.viewport;
-        $('#mrbottomleft').text("WW/WC: " + Math.round(viewport.voi.windowWidth) + "/" + Math.round(viewport.voi.windowCenter));
-        $('#zoomText').text("Zoom: " + viewport.scale.toFixed(2));
-    };
-
-    $(element).on("CornerstoneImageRendered", onViewportUpdated);
-
-    function onNewImage(e, data) {
+    function onNewImage(e) {
         var newImageIdIndex = stack.currentImageIdIndex;
 
         // Populate the current slice span
         var currentValueSpan = document.getElementById("sliceText");
         currentValueSpan.textContent = "Image " + (newImageIdIndex + 1) + "/" + imageIds.length;
     }
-    $(element).on("CornerstoneNewImage", onNewImage);
 
-    function onKeyPress(e, data) {
+    element.addEventListener('cornerstonenewimage', onNewImage);
+
+    function onKeyPress(e) {
+        var data = e.detail;
         var keyCode = data.keyCode;
         var keyName;
         var keys = {
@@ -108,10 +99,10 @@ is used by our example image loader-->
             keyName = String.fromCharCode(keyCode);
         }
 
-        $("#keyPressed").text("Pressed: " + keyName);
+        document.getElementById('keyPressed').textContent = "Pressed: " + keyName;
     }
 
-    $(element).on("CornerstoneToolsKeyDown", onKeyPress);
+    element.addEventListener("cornerstonetoolskeydown", onKeyPress);
 
     var imageIds = [
         'example://1',
@@ -135,16 +126,11 @@ is used by our example image loader-->
         cornerstoneTools.addToolState(element, 'stack', stack);
 
         // Set the div to focused, so keypress events are handled
-        $(element).attr("tabindex", 0).focus();
+        element.tabIndex = 0;
+        element.focus();
 
         // Enable all tools we want to use with this element
         cornerstoneTools.stackScrollKeyboard.activate(element);
-
-        function activate(id)
-        {
-            $('a').removeClass('active');
-            $(id).addClass('active');
-        }
     });
 
 </script>

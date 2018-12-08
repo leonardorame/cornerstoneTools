@@ -1,4 +1,4 @@
-import { cornerstone } from '../externalModules.js';
+import external from '../externalModules.js';
 import { getMaxSimultaneousRequests } from '../util/getMaxSimultaneousRequests.js';
 
 const requestPool = {
@@ -22,7 +22,7 @@ let maxNumRequests = {
 let awake = false;
 const grabDelay = 20;
 
-function addRequest (element, imageId, type, preventCache, doneCallback, failCallback) {
+function addRequest (element, imageId, type, preventCache, doneCallback, failCallback, addToBeginning) {
   if (!requestPool.hasOwnProperty(type)) {
     throw new Error('Request type must be one of interaction, thumbnail, or prefetch');
   }
@@ -31,7 +31,7 @@ function addRequest (element, imageId, type, preventCache, doneCallback, failCal
     return;
   }
 
-      // Describe the request
+  // Describe the request
   const requestDetails = {
     type,
     imageId,
@@ -40,11 +40,11 @@ function addRequest (element, imageId, type, preventCache, doneCallback, failCal
     failCallback
   };
 
-      // If this imageId is in the cache, resolve it immediately
-  const imagePromise = cornerstone.imageCache.getImagePromise(imageId);
+  // If this imageId is in the cache, resolve it immediately
+  const imageLoadObject = external.cornerstone.imageCache.getImageLoadObject(imageId);
 
-  if (imagePromise) {
-    imagePromise.then(function (image) {
+  if (imageLoadObject) {
+    imageLoadObject.promise.then(function (image) {
       doneCallback(image);
     }, function (error) {
       failCallback(error);
@@ -53,12 +53,20 @@ function addRequest (element, imageId, type, preventCache, doneCallback, failCal
     return;
   }
 
-      // Add it to the end of the stack
-  requestPool[type].push(requestDetails);
+  if (addToBeginning) {
+    // Add it to the beginning of the stack
+    requestPool[type].unshift(requestDetails);
+  } else {
+    // Add it to the end of the stack
+    requestPool[type].push(requestDetails);
+  }
+
+  // Wake up
+  awake = true;
 }
 
 function clearRequestStack (type) {
-      // Console.log('clearRequestStack');
+  // Console.log('clearRequestStack');
   if (!requestPool.hasOwnProperty(type)) {
     throw new Error('Request type must be one of interaction, thumbnail, or prefetch');
   }
@@ -77,7 +85,8 @@ function startAgain () {
 }
 
 function sendRequest (requestDetails) {
-      // Increment the number of current requests of this type
+  const cornerstone = external.cornerstone;
+  // Increment the number of current requests of this type
   const type = requestDetails.type;
 
   numRequests[type]++;
@@ -87,21 +96,21 @@ function sendRequest (requestDetails) {
   const doneCallback = requestDetails.doneCallback;
   const failCallback = requestDetails.failCallback;
 
-      // Check if we already have this image promise in the cache
-  const imagePromise = cornerstone.imageCache.getImagePromise(imageId);
+  // Check if we already have this image promise in the cache
+  const imageLoadObject = cornerstone.imageCache.getImageLoadObject(imageId);
 
-  if (imagePromise) {
-          // If we do, remove from list (when resolved, as we could have
-          // Pending prefetch requests) and stop processing this iteration
-    imagePromise.then(function (image) {
+  if (imageLoadObject) {
+    // If we do, remove from list (when resolved, as we could have
+    // Pending prefetch requests) and stop processing this iteration
+    imageLoadObject.promise.then(function (image) {
       numRequests[type]--;
-              // Console.log(numRequests);
+      // Console.log(numRequests);
 
       doneCallback(image);
       startAgain();
     }, function (error) {
       numRequests[type]--;
-              // Console.log(numRequests);
+      // Console.log(numRequests);
       failCallback(error);
       startAgain();
     });
@@ -135,22 +144,22 @@ function sendRequest (requestDetails) {
     });
   }
 
-      // Load and cache the image
+  // Load and cache the image
   loader.then(function (image) {
     numRequests[type]--;
-          // Console.log(numRequests);
+    // Console.log(numRequests);
     doneCallback(image);
     startAgain();
   }, function (error) {
     numRequests[type]--;
-          // Console.log(numRequests);
+    // Console.log(numRequests);
     failCallback(error);
     startAgain();
   });
 }
 
 function startGrabbing () {
-      // Begin by grabbing X images
+  // Begin by grabbing X images
   const maxSimultaneousRequests = getMaxSimultaneousRequests();
 
   maxNumRequests = {

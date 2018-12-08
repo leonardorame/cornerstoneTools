@@ -1,25 +1,19 @@
-import { $ } from '../externalModules.js';
+import EVENTS from '../events.js';
 
 export default function (mouseWheelCallback) {
-  const toolInterface = {
+  return {
     activate (element) {
-      $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
-      const eventData = {
-      };
-
-      $(element).on('CornerstoneToolsMouseWheel', eventData, mouseWheelCallback);
+      element.removeEventListener(EVENTS.MOUSE_WHEEL, mouseWheelCallback);
+      element.addEventListener(EVENTS.MOUSE_WHEEL, mouseWheelCallback);
     },
     disable (element) {
-      $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
+      element.removeEventListener(EVENTS.MOUSE_WHEEL, mouseWheelCallback);
     },
     enable (element) {
-      $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
+      element.removeEventListener(EVENTS.MOUSE_WHEEL, mouseWheelCallback);
     },
     deactivate (element) {
-      $(element).off('CornerstoneToolsMouseWheel', mouseWheelCallback);
+      element.removeEventListener(EVENTS.MOUSE_WHEEL, mouseWheelCallback);
     }
   };
-
-
-  return toolInterface;
 }

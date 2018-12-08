@@ -1,11 +1,17 @@
-import { $, cornerstone } from '../externalModules.js';
+import EVENTS from '../events.js';
+import external from '../externalModules.js';
 import anyHandlesOutsideImage from './anyHandlesOutsideImage.js';
 import { removeToolState } from '../stateManagement/toolState.js';
+import triggerEvent from '../util/triggerEvent.js';
 
-export default function (touchEventData, data, toolData, toolType, deleteIfHandleOutsideImage, doneMovingCallback) {
+export default function (event, data, toolData, toolType, deleteIfHandleOutsideImage, doneMovingCallback) {
+  const touchEventData = event.detail;
   const element = touchEventData.element;
+  const cornerstone = external.cornerstone;
 
-  function touchDragCallback (e, eventData) {
+  function touchDragCallback (e) {
+    const eventData = e.detail;
+
     data.active = true;
 
     Object.keys(data.handles).forEach(function (name) {
@@ -20,50 +26,55 @@ export default function (touchEventData, data, toolData, toolType, deleteIfHandl
     });
     cornerstone.updateImage(element);
 
-    const eventType = 'CornerstoneToolsMeasurementModified';
+    const eventType = EVENTS.MEASUREMENT_MODIFIED;
     const modifiedEventData = {
       toolType,
       element,
       measurementData: data
     };
 
-    $(element).trigger(eventType, modifiedEventData);
+    triggerEvent(element, eventType, modifiedEventData);
 
-    return false; // False = causes jquery to preventDefault() and stopPropagation() this event
+    e.preventDefault();
+    e.stopPropagation();
   }
 
-  $(element).on('CornerstoneToolsTouchDrag', touchDragCallback);
+  element.addEventListener(EVENTS.TOUCH_DRAG, touchDragCallback);
 
-  function touchEndCallback (e, eventData) {
-        // Console.log('touchMoveAllHandles touchEndCallback: ' + e.type);
+  function touchEndCallback (e) {
+    const eventData = e.detail;
+
+    // Console.log('touchMoveAllHandles touchEndCallback: ' + e.type);
     data.active = false;
     data.invalidated = false;
 
-    $(element).off('CornerstoneToolsTouchDrag', touchDragCallback);
-    $(element).off('CornerstoneToolsTouchPinch', touchEndCallback);
-    $(element).off('CornerstoneToolsTouchPress', touchEndCallback);
-    $(element).off('CornerstoneToolsTouchEnd', touchEndCallback);
-    $(element).off('CornerstoneToolsDragEnd', touchEndCallback);
-    $(element).off('CornerstoneToolsTap', touchEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_DRAG, touchDragCallback);
 
-        // If any handle is outside the image, delete the tool data
-    if (deleteIfHandleOutsideImage === true &&
-            anyHandlesOutsideImage(eventData, data.handles)) {
+    element.removeEventListener(EVENTS.TOUCH_PINCH, touchEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_PRESS, touchEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_END, touchEndCallback);
+    element.removeEventListener(EVENTS.TOUCH_DRAG_END, touchEndCallback);
+    element.removeEventListener(EVENTS.TAP, touchEndCallback);
+
+    // If any handle is outside the image, delete the tool data
+    const handlesOutsideImage = anyHandlesOutsideImage(eventData, data.handles);
+
+    if (deleteIfHandleOutsideImage === true && handlesOutsideImage === true) {
       removeToolState(element, toolType, data);
     }
 
     cornerstone.updateImage(element);
 
     if (typeof doneMovingCallback === 'function') {
-      doneMovingCallback(e, eventData);
+      doneMovingCallback(e);
     }
   }
 
-  $(element).on('CornerstoneToolsTouchPinch', touchEndCallback);
-  $(element).on('CornerstoneToolsTouchPress', touchEndCallback);
-  $(element).on('CornerstoneToolsTouchEnd', touchEndCallback);
-  $(element).on('CornerstoneToolsDragEnd', touchEndCallback);
-  $(element).on('CornerstoneToolsTap', touchEndCallback);
+  element.addEventListener(EVENTS.TOUCH_PINCH, touchEndCallback);
+  element.addEventListener(EVENTS.TOUCH_PRESS, touchEndCallback);
+  element.addEventListener(EVENTS.TOUCH_END, touchEndCallback);
+  element.addEventListener(EVENTS.TOUCH_DRAG_END, touchEndCallback);
+  element.addEventListener(EVENTS.TAP, touchEndCallback);
 
   return true;
 }
